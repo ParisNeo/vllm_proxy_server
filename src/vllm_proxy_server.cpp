@@ -23,7 +23,7 @@ std::map<std::string, std::pair<std::string, std::queue<int>>> servers;
 std::map<std::string, std::string> authorized_users;
 std::mutex mtx;
 
-void add_access_log_entry(const std::string& event, const std::string& user, const std::string& ip_address, const std::string& access, const std::string& server, int nb_queued_requests_on_server, const std::string& error) {
+void add_access_log_entry(const std::string& log_path, const std::string& event, const std::string& user, const std::string& ip_address, const std::string& access, const std::string& server, int nb_queued_requests_on_server, const std::string& error) {
     std::stringstream ss;
     ss << std::chrono::system_clock::now() << ",";
     ss << event << ",";
@@ -105,7 +105,7 @@ void handle_request(const std::string& local_address, const std::string& config_
                 }
 
                 if (user == "unknown") {
-                    add_access_log_entry("rejected", user, ip_address, "Denied", "", -1, "Authentication failed");
+                    add_access_log_entry(log_path, "rejected", user, ip_address, "Denied", "", -1, "Authentication failed");
                     http::response<http::string_body> res(http::status::unauthorized, req.version());
                     res.set(http::field::server, "Vllm Proxy Server");
                     res.set(http::field::content_type, "text/plain");
@@ -125,7 +125,7 @@ void handle_request(const std::string& local_address, const std::string& config_
                 // Apply the queuing mechanism only for a specific endpoint.
                 std::queue<int>& que = min_queued_server.second.second;
 
-                add_access_log_entry("gen_request", user, ip_address, "Authorized", min_queued_server.first, que.size());
+                add_access_log_entry(log_path, "gen_request", user, ip_address, "Authorized", min_queued_server.first, que.size());
                 que.push(1);
 
                 mtx.unlock();
@@ -168,7 +168,7 @@ void handle_request(const std::string& local_address, const std::string& config_
 
                 mtx.lock();
                 que.pop();
-                add_access_log_entry("gen_done", user, ip_address, "Authorized", min_queued_server.first, que.size());
+                add_access_log_entry(log_path, "gen_done", user, ip_address, "Authorized", min_queued_server.first, que.size());
                 mtx.unlock();
             }
         }

@@ -1,3 +1,9 @@
 {
-    "ros.distro": "noetic"
+    "ros.distro": "noetic",
+    "files.associations": {
+        "ostream": "cpp",
+        "iosfwd": "cpp",
+        "utility": "cpp",
+        "xstring": "cpp"
+    }
 }
