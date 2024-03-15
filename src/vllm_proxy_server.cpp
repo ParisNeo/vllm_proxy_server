@@ -16,8 +16,8 @@
 #include <mutex>
 #include <sstream>
 
+namespace http = boost::beast::http;
 using tcp = boost::asio::ip::tcp;
-using http = boost::beast::http;
 
 std::map<std::string, std::pair<std::string, std::queue<int>>> servers;
 std::map<std::string, std::string> authorized_users;
@@ -34,7 +34,7 @@ void add_access_log_entry(const std::string& event, const std::string& user, con
     ss << nb_queued_requests_on_server << ",";
     ss << error;
 
-    std::ofstream log_file("access_log.txt", std::ios_base::app);
+    std::ofstream log_file(log_path, std::ios_base::app);
     if (log_file.is_open()) {
         log_file << ss.str() << std::endl;
         log_file.close();
@@ -67,13 +67,15 @@ void get_authorized_users(const std::string& filename) {
     }
 }
 
-void handle_request(tcp::socket& socket, const std::string& config_filename, const std::string& users_filename, int port) {
+void handle_request(const std::string& local_address, const std::string& config_filename, const std::string& users_filename, const std::string& log_path, int port, bool deactivate_security, boost::asio::io_context& io_context, http::request<http::string_body>& original_req, http::response<http::string_body>& response) {
+    get_config(config_filename);
+    get_authorized_users(users_filename);
+
     try {
-        boost::asio::io_context ioc;
-        tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), port));
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port));
 
         while (true) {
-            tcp::socket socket(ioc);
+            tcp::socket socket(io_context);
             acceptor.accept(socket);
 
             boost::asio::streambuf request_buf;
@@ -86,7 +88,7 @@ void handle_request(tcp::socket& socket, const std::string& config_filename, con
             std::string ip_address = socket.remote_endpoint().address().to_string();
             std::string user = "unknown";
 
-            if (req.method() == http::verb::post || req.method() == http::verb::get) {
+            if (!deactivate_security) {
                 mtx.lock();
 
                 // Validate user and key
@@ -132,7 +134,8 @@ void handle_request(tcp::socket& socket, const std::string& config_filename, con
                 std::string path = req.target().to_string();
                 std::string method = req.method().to_string();
 
-                http::request<http::string_body> original_req(method, path, req.version());
+                original_req.target() = path;
+                original_req.method() = method;
                 original_req.set(http::field::host, min_queued_server.second.first);
                 original_req.set(http::field::user_agent, req.at(http::field::user_agent));
                 original_req.set(http::field::accept, req.at(http::field::accept));
@@ -150,15 +153,17 @@ void handle_request(tcp::socket& socket, const std::string& config_filename, con
                     original_req.prepare_payload();
                 }
 
-                http::response<http::string_body> response;
+                http::response<http::string_body> res;
                 {
-                    boost::beast::http::stream<tcp::socket> http_stream(ioc);
+                    boost::beast::http::stream<tcp::socket> http_stream(io_context);
                     http_stream.connect(min_queued_server.second.first);
                     http_stream.write(original_req);
-                    http_stream.read(response);
+                    http_stream.read(res);
                 }
 
+                response = res;
                 response.set(http::field::server, "Vllm Proxy Server");
+
                 http::write(socket, response);
 
                 mtx.lock();
@@ -227,21 +232,14 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    get_config(config_filename);
-    get_authorized_users(users_filename);
+    boost::asio::io_context io_context;
+    http::request<http::string_body> original_req;
+    http::response<http::string_body> response;
 
-    tcp::endpoint endpoint(tcp::v4(), port);
-    tcp::acceptor acceptor(boost::asio::io_context(), endpoint);
-
-    std::cout << "Vllm Proxy server" << std::endl;
-    std::cout << "Author: ParisNeo" << std::endl;
-
-    boost::thread t(handle_request, acceptor.local_endpoint().address(), config_filename, users_filename, log_path, port, deactivate_security);
+    boost::thread t(handle_request, local_address, config_filename, users_filename, log_path, port, deactivate_security, std::ref(io_context), std::ref(original_req), std::ref(response));
     t.detach();
 
-    boost::asio::io_context io_context;
     io_context.run();
 
     return 0;
 }
-
