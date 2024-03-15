@@ -168,7 +168,7 @@ void handle_request(const std::string& local_address, const std::string& config_
 
                 mtx.lock();
                 que.pop();
-                add_access_log_entry(log_path, "gen_done", user, ip_address, "Authorized", min_queued_server.first, que.size());
+                add_access_log_entry(log_path, "gen_done", user, ip_address, "Authorized", min_queued_server.first, que.size(),"");
                 mtx.unlock();
             }
         }
