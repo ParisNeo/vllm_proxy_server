@@ -67,7 +67,7 @@ void get_authorized_users(const std::string& filename) {
     }
 }
 
-void handle_request(const std::string& local_address, const std::string& config_filename, const std::string& users_filename, const std::string& log_path, int port, bool deactivate_security, boost::asio::io_context& io_context, http::request<http::string_body>& original_req, http::response<http::string_body>& response) {
+void handle_request(const std::string& config_filename, const std::string& users_filename, const std::string& log_path, int port, bool deactivate_security, boost::asio::io_context& io_context, http::request<http::string_body>& original_req, http::response<http::string_body>& response) {
     get_config(config_filename);
     get_authorized_users(users_filename);
 
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
     http::request<http::string_body> original_req;
     http::response<http::string_body> response;
 
-    boost::thread t(handle_request, local_address, config_filename, users_filename, log_path, port, deactivate_security, std::ref(io_context), std::ref(original_req), std::ref(response));
+    boost::thread t(handle_request, config_filename, users_filename, log_path, port, deactivate_security, std::ref(io_context), std::ref(original_req), std::ref(response));
     t.detach();
 
     io_context.run();
