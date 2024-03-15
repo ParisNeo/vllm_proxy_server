@@ -52,7 +52,7 @@ def main():
     servers = get_config(args.config)  
     authorized_users = get_authorized_users(args.users_list)
     deactivate_security = args.deactivate_security
-    ASCIIColors.red("Vllm Proxy server")
+    ASCIIColors.red("\n\nVllm Proxy server")
     ASCIIColors.red("Author: ParisNeo")
 
     class RequestHandler(BaseHTTPRequestHandler):
