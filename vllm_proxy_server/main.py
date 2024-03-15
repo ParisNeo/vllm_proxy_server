@@ -156,12 +156,12 @@ class Server:
                     self.add_access_log_entry(event="gen_done", user=self.user_manager.user, ip_address=client_ip, access="Authorized", server=min_queued_server[0], nb_queued_requests_on_server=que.qsize())
 
         class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-            def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
-                self.num_threads = self.server.num_threads
-                HTTPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
+            def __init__(selfi, server_address, RequestHandlerClass, bind_and_activate=True):
+                selfi.num_threads = self.num_threads
+                HTTPServer.__init__(selfi, server_address, RequestHandlerClass, bind_and_activate)
 
         print('Starting server')
-        self.server = ThreadedHTTPServer(('', self.port), RequestHandler)
+        self.server = ThreadedHTTPServer(s,('', self.port), RequestHandler)
         print(f'Running server on port {self.port}')
         self.server.serve_forever()
 
