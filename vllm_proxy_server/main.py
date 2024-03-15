@@ -161,7 +161,7 @@ class Server:
                 HTTPServer.__init__(selfi, server_address, RequestHandlerClass, bind_and_activate)
 
         print('Starting server')
-        self.server = ThreadedHTTPServer(s,('', self.port), RequestHandler)
+        self.server = ThreadedHTTPServer(('', self.port), RequestHandler)
         print(f'Running server on port {self.port}')
         self.server.serve_forever()
 
