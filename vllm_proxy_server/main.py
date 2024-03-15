@@ -31,7 +31,7 @@ class UserManager:
         return authorized_users
 
     def validate_user_and_key(self, user, key):
-        return authorized_users.get(user) == key
+        return self.authorized_users.get(user) == key
 
 class Server:
     def __init__(self, config, user_manager, log_path, num_threads=10):
@@ -188,5 +188,11 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=8000, help='Port number for the server')
     parser.add_argument('--num_threads', type=int, default=10, help='Number of worker threads for the server')
     args = parser.parse_args()
+
+    print(f"Configuration file: {args.config}")
+    print(f"Users list file: {args.users_list}")
+    print(f"Access log file: {args.log_path}")
+    print(f"Port number: {args.port}")
+    print(f"Number of worker threads: {args.num_threads}")
 
     VllmProxyServer(args.config, args.users_list, args.log_path, args.num_threads).start()
