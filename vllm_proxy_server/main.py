@@ -43,9 +43,9 @@ class Server:
 
     def start(self):
         class RequestHandler(BaseHTTPRequestHandler):
-            def __init__(self, *args, **kwargs):
-                self.user_manager = self.server.user_manager
-                BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
+            def __init__(selfi, *args, **kwargs):
+                selfi.user_manager = self.user_manager
+                BaseHTTPRequestHandler.__init__(selfi, *args, **kwargs)
 
             def add_access_log_entry(self, event, user, ip_address, access, server, nb_queued_requests_on_server, error=""):
                 log_file_path = Path(self.server.log_path)
