@@ -18,7 +18,7 @@ requirements_dev = read_requirements("requirements_dev.txt")
 
 setuptools.setup(
     name="vllm_proxy_server",
-    version="7.1.0",
+    version="1.0.0",
     author="Saifeddine ALOUI (ParisNeo)",
     author_email="aloui.saifeddine@gmail.com",
     description="A fastapi server for petals decentralized text generation",

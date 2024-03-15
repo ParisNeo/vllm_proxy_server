@@ -1,8 +1,8 @@
 """
-project: ollama_proxy_server
+project: vllm_proxy_server
 file: main.py
 author: ParisNeo
-description: This is a proxy server that adds a security layer to one or multiple ollama servers and routes the requests to the right server in order to minimize the charge of the server.
+description: This is a proxy server that adds a security layer to one or multiple vllm servers and routes the requests to the right server in order to minimize the charge of the server.
 """
 
 import configparser
@@ -52,7 +52,7 @@ def main():
     servers = get_config(args.config)  
     authorized_users = get_authorized_users(args.users_list)
     deactivate_security = args.deactivate_security
-    ASCIIColors.red("Ollama Proxy server")
+    ASCIIColors.red("Vllm Proxy server")
     ASCIIColors.red("Author: ParisNeo")
 
     class RequestHandler(BaseHTTPRequestHandler):
