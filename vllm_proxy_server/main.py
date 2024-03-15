@@ -34,8 +34,9 @@ class UserManager:
         return self.authorized_users.get(user) == key
 
 class Server:
-    def __init__(self, config, user_manager, log_path, num_threads=10):
+    def __init__(self, config, port, user_manager, log_path, num_threads=10):
         self.config = config
+        self.port = port
         self.user_manager = user_manager
         self.log_path = log_path
         self.num_threads = num_threads
@@ -160,19 +161,20 @@ class Server:
                 HTTPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate)
 
         print('Starting server')
-        self.server = ThreadedHTTPServer(('', self.config['port']), RequestHandler)
-        print(f'Running server on port {self.config["port"]}')
+        self.server = ThreadedHTTPServer(('', self.port), RequestHandler)
+        print(f'Running server on port {self.port}')
         self.server.serve_forever()
 
 class VllmProxyServer:
-    def __init__(self, config_file, users_list, log_path, num_threads=10):
+    def __init__(self, config_file, port, users_list, log_path, num_threads=10):
         self.config = get_config(config_file)
         self.user_manager = UserManager(users_list)
         self.log_path = log_path
         self.num_threads = num_threads
+        self.port = port
 
     def start(self):
-        self.server = Server(self.config, self.user_manager, self.log_path, self.num_threads)
+        self.server = Server(self.config, self.port, self.user_manager, self.log_path, self.num_threads)
         self.server.start()
 
 def get_config(filename):
@@ -195,4 +197,4 @@ if __name__ == "__main__":
     print(f"Port number: {args.port}")
     print(f"Number of worker threads: {args.num_threads}")
 
-    VllmProxyServer(args.config, args.users_list, args.log_path, args.num_threads).start()
+    VllmProxyServer(args.config, args.port, args.users_list, args.log_path, args.num_threads).start()
