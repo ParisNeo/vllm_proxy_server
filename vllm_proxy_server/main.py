@@ -38,11 +38,18 @@ async def auth_middleware(request: Request, call_next):
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
-        username, secret = token.split(":")
+        token_parts = token.split(":")
+        if len(token_parts) != 2:
+            await log_request("unknown", request.client.host, "gen_request", "Denied")
+            raise HTTPException(status_code=401, detail="Invalid key format. Expected username:secret.")
+        username, secret = token_parts
         if username in api_keys and api_keys[username] == secret:
             response = await call_next(request)
             await log_request(username, request.client.host, "gen_request", "Authorized")
             return response
+        else:
+            await log_request(username, request.client.host, "gen_request", "Denied")
+            raise HTTPException(status_code=401, detail="Invalid key")
     await log_request("unknown", request.client.host, "gen_request", "Denied")
     raise HTTPException(status_code=401, detail="Unauthorized")
 
