@@ -28,7 +28,7 @@ def load_api_keys(filename):
 api_keys = load_api_keys(args.api_keys_file)
 
 # Logging function
-async def log_request(username, ip_address, event, access, args):
+async def log_request(username, ip_address, event, access):
     # Check if the file exists and is empty to add headers
     file_exists = os.path.isfile(args.log_file)
     with open(args.log_file, "a", newline='') as csvfile:
