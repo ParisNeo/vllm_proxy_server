@@ -7,6 +7,8 @@ import csv
 import datetime
 import argparse
 import json
+import os
+
 
 # Step 1: Setup argparse
 parser = argparse.ArgumentParser(description="Run a proxy server with authentication and logging.")
@@ -26,9 +28,15 @@ def load_api_keys(filename):
 api_keys = load_api_keys(args.api_keys_file)
 
 # Logging function
-async def log_request(username, ip_address, event, access):
+async def log_request(username, ip_address, event, access, args):
+    # Check if the file exists and is empty to add headers
+    file_exists = os.path.isfile(args.log_file)
     with open(args.log_file, "a", newline='') as csvfile:
         log_writer = csv.writer(csvfile)
+        if not file_exists or os.stat(args.log_file).st_size == 0:
+            # Write the headers if the file is new or empty
+            log_writer.writerow(['time_stamp', 'event', 'user_name', 'ip_address', 'access'])
+        # Write the log entry
         log_writer.writerow([datetime.datetime.now(), event, username, ip_address, access])
 
 # Step 3: Authentication Middleware
